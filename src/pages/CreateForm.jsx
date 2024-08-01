@@ -43,6 +43,7 @@ const CreateForm = ({ item }) => {
       setInputType("");
       setInputTitle("");
       setPlaceholder("");
+      setEditInput("");
     } else {
       alert("Maximum of 20 inputs allowed");
     }
@@ -57,7 +58,7 @@ const CreateForm = ({ item }) => {
     setSelectedInput(index);
     setInputTitle(inputs[index].title);
     setEditPlaceholder(inputs[index].placeholder);
-    setEditInput(inputs[index].type);
+    setEditInput(inputs[index].title);
   };
 
   const handleEditInputChange = () => {
@@ -77,9 +78,15 @@ const CreateForm = ({ item }) => {
 
     try {
       if (item) {
-        await axios.post(`http://localhost:5000/api/forms/${id}`, formData);
+        await axios.post(
+          `https://form-builder-backend-538n.vercel.app/api/forms/${id}`,
+          formData
+        );
       } else {
-        await axios.post("http://localhost:5000/api/saveForm", formData);
+        await axios.post(
+          "https://form-builder-backend-538n.vercel.app/api/saveForm",
+          formData
+        );
       }
       alert("Form saved successfully!");
     } catch (error) {

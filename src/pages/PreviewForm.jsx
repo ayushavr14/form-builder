@@ -11,7 +11,7 @@ const PreviewForm = () => {
     const fetchForm = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/forms/${id}`
+          `https://form-builder-backend-538n.vercel.app/api/forms/${id}`
         );
         setForm(response.data);
       } catch (error) {

@@ -1,14 +1,21 @@
 import axios from "axios";
-import React from "react";
+import React, { useState } from "react";
+import { PiSpinnerGapBold } from "react-icons/pi";
 import { Link } from "react-router-dom";
 
 const FormList = ({ forms, setForms }) => {
+  const [isLoading, setIsLoading] = useState(false);
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/forms/${id}`);
+      setIsLoading(true);
+      await axios.delete(
+        `https://form-builder-backend-538n.vercel.app/api/forms/${id}`
+      );
       setForms(forms.filter((form) => form._id !== id));
     } catch (error) {
       console.error("Error deleting form:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -33,7 +40,11 @@ const FormList = ({ forms, setForms }) => {
                 onClick={() => handleDelete(form._id)}
                 className="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600"
               >
-                Delete
+                {isLoading ? (
+                  <PiSpinnerGapBold size={24} className="animate-spin" />
+                ) : (
+                  "Delete"
+                )}
               </button>
             </div>
           </div>

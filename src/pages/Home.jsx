@@ -2,17 +2,24 @@ import { Link } from "react-router-dom";
 import FormList from "./FormsList";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { PiSpinnerGapBold } from "react-icons/pi";
 
 const Home = () => {
   const [forms, setForms] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchForms = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/forms");
+        setIsLoading(true);
+        const response = await axios.get(
+          "https://form-builder-backend-538n.vercel.app/api/forms"
+        );
         setForms(response.data);
       } catch (error) {
         console.error("Error fetching forms:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -30,10 +37,13 @@ const Home = () => {
       </div>
       <hr className="mt-7 border-b" />
       <div className="mt-5 p-4">
-        <h1 className="text-4xl">Forms</h1>
+        <h1 className="text-4xl text-center">Forms</h1>
+        <div className="flex justify-center items-center mt-4">
+          {isLoading && <PiSpinnerGapBold size={28} className="animate-spin" />}
+        </div>
         <div className="mt-5">
-          {!forms.length ? (
-            <h1 className="text-lg mt-2">You have no forms created yet</h1>
+          {!forms.length && !isLoading ? (
+            <h1 className="text-2xl text-center">No forms created yet</h1>
           ) : (
             <FormList forms={forms} setForms={setForms} />
           )}
