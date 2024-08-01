@@ -13,7 +13,6 @@ const CreateForm = ({ item }) => {
   const [selectedInput, setSelectedInput] = useState(null);
   const [editInput, setEditInput] = useState("");
   const [editPlaceholder, setEditPlaceholder] = useState("");
-  console.log(inputs);
 
   const addInput = () => {
     if (formTitle.trim() === "") {
