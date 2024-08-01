@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useParams } from "react-router-dom";
+import axiosInstance from "../services/axiosInstance";
 
 const PreviewForm = () => {
   const { id } = useParams();
@@ -10,9 +10,7 @@ const PreviewForm = () => {
   useEffect(() => {
     const fetchForm = async () => {
       try {
-        const response = await axios.get(
-          `https://form-builder-backend-538n.vercel.app/api/forms/${id}`
-        );
+        const response = await axiosInstance.get(`/forms/${id}`);
         setForm(response.data);
       } catch (error) {
         console.error("Error fetching form:", error);

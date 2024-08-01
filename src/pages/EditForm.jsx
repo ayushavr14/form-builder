@@ -1,7 +1,7 @@
-import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { PiSpinnerGapBold } from "react-icons/pi";
 import { useParams } from "react-router-dom";
+import axiosInstance from "../services/axiosInstance";
 import CreateForm from "./CreateForm";
 
 const EditForm = () => {
@@ -13,9 +13,7 @@ const EditForm = () => {
     const fetchForm = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get(
-          `https://form-builder-backend-538n.vercel.app/api/forms/${id}`
-        );
+        const response = await axiosInstance.get(`/forms/${id}`);
         setForm(response.data);
       } catch (error) {
         console.error("Error fetching form:", error);

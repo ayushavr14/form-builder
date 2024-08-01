@@ -1,98 +1,141 @@
 import React, { useState } from "react";
-import axios from "axios"; // Assuming you are using axios for API calls
-import SideEditor from "../components/SideEditor";
 import { useParams } from "react-router-dom";
+import SideEditor from "../components/SideEditor";
+import axiosInstance from "../services/axiosInstance";
+import { PiSpinnerGapBold } from "react-icons/pi";
+
+const InputForm = ({ index, input, handleInputClick, deleteInput }) => (
+  <div
+    key={index}
+    className="border p-3 rounded bg-white flex justify-between items-center"
+  >
+    <div className="cursor-pointer flex-1">
+      <label className="block text-gray-700">{input.title}</label>
+      <input
+        type={input.type}
+        placeholder={input.placeholder}
+        readOnly
+        className="w-full px-3 py-2 border rounded bg-gray-200 cursor-not-allowed"
+      />
+    </div>
+    <button
+      className="ml-4 bg-green-600 text-white py-1 px-3 rounded hover:bg-green-500"
+      onClick={() => handleInputClick(index)}
+    >
+      Edit
+    </button>
+    <button
+      onClick={() => deleteInput(index)}
+      className="ml-4 bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600"
+    >
+      Delete
+    </button>
+  </div>
+);
 
 const CreateForm = ({ item }) => {
   const { id } = useParams();
-  const [formTitle, setFormTitle] = useState(item?.title || "");
-  const [inputs, setInputs] = useState(item?.inputs || []);
-  const [inputType, setInputType] = useState("");
-  const [inputTitle, setInputTitle] = useState("");
-  const [placeholder, setPlaceholder] = useState("");
-  const [selectedInput, setSelectedInput] = useState(null);
-  const [editInput, setEditInput] = useState("");
-  const [editPlaceholder, setEditPlaceholder] = useState("");
+  const [formState, setFormState] = useState({
+    title: item?.title || "",
+    inputs: item?.inputs || [],
+    inputType: "",
+    inputTitle: "",
+    placeholder: "",
+    selectedInput: null,
+    editInput: "",
+    editPlaceholder: "",
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const setFormStateField = (field, value) => {
+    setFormState((prevState) => ({ ...prevState, [field]: value }));
+  };
+
+  const validateForm = () => {
+    const { title, inputType, inputTitle, placeholder, inputs } = formState;
+    if (!title.trim()) return "Form title is required";
+    if (!inputType.trim()) return "Input type is required";
+    if (!inputTitle.trim()) return "Input title is required";
+    if (!placeholder.trim()) return "Placeholder is required";
+    if (inputs.length >= 20) return "Maximum of 20 inputs allowed";
+    return null;
+  };
 
   const addInput = () => {
-    if (formTitle.trim() === "") {
-      alert("Form title is required");
-      return;
-    }
-    if (inputType.trim() === "") {
-      alert("Input type is required");
+    const validationError = validateForm();
+    if (validationError) {
+      alert(validationError);
       return;
     }
 
-    if (inputTitle.trim() === "") {
-      alert("Input title is required");
-      return;
-    }
-
-    if (placeholder.trim() === "") {
-      alert("Placeholder is required");
-      return;
-    }
-
-    if (inputs.length < 20) {
-      setInputs([
-        ...inputs,
-        { type: inputType, title: inputTitle, placeholder },
-      ]);
-      setInputType("");
-      setInputTitle("");
-      setPlaceholder("");
-      setEditInput("");
-    } else {
-      alert("Maximum of 20 inputs allowed");
-    }
+    const { inputType, inputTitle, placeholder, inputs } = formState;
+    setFormState({
+      ...formState,
+      inputs: [...inputs, { type: inputType, title: inputTitle, placeholder }],
+      inputType: "",
+      inputTitle: "",
+      placeholder: "",
+      editInput: "",
+    });
   };
 
   const deleteInput = (index) => {
-    setInputs(inputs.filter((_, i) => i !== index));
-    setSelectedInput(null);
+    setFormState({
+      ...formState,
+      inputs: formState.inputs.filter((_, i) => i !== index),
+      selectedInput: null,
+    });
   };
 
   const handleInputClick = (index) => {
-    setSelectedInput(index);
-    setInputTitle(inputs[index].title);
-    setEditPlaceholder(inputs[index].placeholder);
-    setEditInput(inputs[index].title);
+    const input = formState.inputs[index];
+    setFormState({
+      ...formState,
+      selectedInput: index,
+      editInput: input.title,
+      editPlaceholder: input.placeholder,
+    });
   };
 
   const handleEditInputChange = () => {
-    const updatedInputs = inputs.map((input, index) =>
-      index === selectedInput
-        ? { ...input, title: editInput, placeholder: editPlaceholder }
-        : input
-    );
-    setInputs(updatedInputs);
+    const { selectedInput, editInput, editPlaceholder, inputs } = formState;
+    setFormState({
+      ...formState,
+      inputs: inputs.map((input, index) =>
+        index === selectedInput
+          ? { ...input, title: editInput, placeholder: editPlaceholder }
+          : input
+      ),
+    });
   };
 
   const saveForm = async () => {
-    const formData = {
-      title: formTitle,
-      inputs: inputs,
-    };
+    const { title, inputs } = formState;
+    const formData = { title, inputs };
 
     try {
-      if (item) {
-        await axios.post(
-          `https://form-builder-backend-538n.vercel.app/api/forms/${id}`,
-          formData
-        );
-      } else {
-        await axios.post(
-          "https://form-builder-backend-538n.vercel.app/api/saveForm",
-          formData
-        );
-      }
+      setIsLoading(true);
+      const url = item ? `/forms/${id}` : "/saveForm";
+      await axiosInstance.post(url, formData);
       alert("Form saved successfully!");
     } catch (error) {
       console.error("Error saving form:", error);
       alert("Failed to save form.");
+    } finally {
+      setIsLoading(false);
     }
   };
+  const {
+    title,
+    inputType,
+    inputTitle,
+    placeholder,
+    inputs,
+    selectedInput,
+    editInput,
+    editPlaceholder,
+  } = formState;
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -102,8 +145,8 @@ const CreateForm = ({ item }) => {
           <label className="block text-gray-700">Form Title:</label>
           <input
             type="text"
-            value={formTitle}
-            onChange={(e) => setFormTitle(e.target.value)}
+            value={title}
+            onChange={(e) => setFormStateField("title", e.target.value)}
             className="w-full px-3 py-2 border rounded"
             placeholder="Enter form title"
           />
@@ -112,7 +155,7 @@ const CreateForm = ({ item }) => {
           <label className="block text-gray-700">Input Type:</label>
           <select
             value={inputType}
-            onChange={(e) => setInputType(e.target.value)}
+            onChange={(e) => setFormStateField("inputType", e.target.value)}
             className="w-full px-3 py-2 border rounded"
           >
             <option value="">Select input type</option>
@@ -129,7 +172,7 @@ const CreateForm = ({ item }) => {
             required
             type="text"
             value={inputTitle}
-            onChange={(e) => setInputTitle(e.target.value)}
+            onChange={(e) => setFormStateField("inputTitle", e.target.value)}
             className="w-full px-3 py-2 border rounded"
             placeholder="Enter input title"
           />
@@ -139,7 +182,7 @@ const CreateForm = ({ item }) => {
           <input
             type="text"
             value={placeholder}
-            onChange={(e) => setPlaceholder(e.target.value)}
+            onChange={(e) => setFormStateField("placeholder", e.target.value)}
             className="w-full px-3 py-2 border rounded"
             placeholder="Enter placeholder"
           />
@@ -155,38 +198,23 @@ const CreateForm = ({ item }) => {
           onClick={saveForm}
           className="bg-green-500 text-white py-2 px-4 rounded ml-4 hover:bg-green-600 disabled:bg-slate-300"
         >
-          Save Form
+          {isLoading ? (
+            <PiSpinnerGapBold size={24} className="animate-spin " />
+          ) : (
+            "Save Form"
+          )}
         </button>
         <div className="mt-6">
-          <h3 className="text-xl font-bold">{formTitle}</h3>
+          <h3 className="text-xl font-bold">{title}</h3>
           <div className="grid grid-cols-2 gap-4 mt-4">
             {inputs.map((input, index) => (
-              <div
+              <InputForm
                 key={index}
-                className="border p-3 rounded bg-white flex justify-between items-center"
-              >
-                <div className="cursor-pointer flex-1">
-                  <label className="block text-gray-700">{input.title}</label>
-                  <input
-                    type={input.type}
-                    placeholder={input.placeholder}
-                    readOnly
-                    className="w-full px-3 py-2 border rounded bg-gray-200 cursor-not-allowed"
-                  />
-                </div>
-                <button
-                  className="ml-4 bg-green-600 text-white py-1 px-3 rounded hover:bg-green-500"
-                  onClick={() => handleInputClick(index)}
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => deleteInput(index)}
-                  className="ml-4 bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600"
-                >
-                  Delete
-                </button>
-              </div>
+                index={index}
+                input={input}
+                handleInputClick={handleInputClick}
+                deleteInput={deleteInput}
+              />
             ))}
           </div>
         </div>
@@ -194,10 +222,12 @@ const CreateForm = ({ item }) => {
       {selectedInput !== null && (
         <SideEditor
           inputTitle={editInput}
-          setInputTitle={setEditInput}
+          setInputTitle={(value) => setFormStateField("editInput", value)}
           placeholder={editPlaceholder}
           handleInputChange={handleEditInputChange}
-          setPlaceholder={setEditPlaceholder}
+          setPlaceholder={(value) =>
+            setFormStateField("editPlaceholder", value)
+          }
         />
       )}
     </div>

@@ -1,8 +1,8 @@
-import { Link } from "react-router-dom";
-import FormList from "./FormsList";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { PiSpinnerGapBold } from "react-icons/pi";
+import { Link } from "react-router-dom";
+import axiosInstance from "../services/axiosInstance";
+import FormList from "./FormsList";
 
 const Home = () => {
   const [forms, setForms] = useState([]);
@@ -12,9 +12,7 @@ const Home = () => {
     const fetchForms = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get(
-          "https://form-builder-backend-538n.vercel.app/api/forms"
-        );
+        const response = await axiosInstance.get("/forms");
         setForms(response.data);
       } catch (error) {
         console.error("Error fetching forms:", error);

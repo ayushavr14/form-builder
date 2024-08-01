@@ -1,16 +1,15 @@
-import axios from "axios";
 import React, { useState } from "react";
 import { PiSpinnerGapBold } from "react-icons/pi";
 import { Link } from "react-router-dom";
+import axiosInstance from "../services/axiosInstance";
 
 const FormList = ({ forms, setForms }) => {
   const [isLoading, setIsLoading] = useState(false);
+
   const handleDelete = async (id) => {
     try {
       setIsLoading(true);
-      await axios.delete(
-        `https://form-builder-backend-538n.vercel.app/api/forms/${id}`
-      );
+      await axiosInstance.delete(`/forms/${id}`);
       setForms(forms.filter((form) => form._id !== id));
     } catch (error) {
       console.error("Error deleting form:", error);
